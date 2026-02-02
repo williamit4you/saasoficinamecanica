@@ -24,7 +24,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
         }
     });
 
-    if (!order || order.office_id !== officeId) {
+    if (!order || order.office_id !== officeId || !officeId) {
         notFound();
     }
 

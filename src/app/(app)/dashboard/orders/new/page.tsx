@@ -8,6 +8,17 @@ export default async function NewOrderPage() {
     const session = await auth();
     const officeId = session?.user?.office_id;
 
+    if (!officeId) {
+        return (
+            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-gray-900">Acesso Restrito</h1>
+                    <p className="mt-2 text-gray-500">Você precisa estar associado a uma oficina para acessar esta página.</p>
+                </div>
+            </div>
+        )
+    }
+
     // Fetch clients and vehicles
     // Optimization: In a real app, fetch vehicles via API when client is selected.
     // Here we will fetch all active data for simplicity as per requirements.

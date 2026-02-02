@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { authenticate } from '@/app/lib/actions';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
     const [errorMessage, dispatch, isPending] = useActionState(
         authenticate,
         undefined,
@@ -97,5 +97,13 @@ export default function LoginPage() {
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Carregando...</div>}>
+            <LoginForm />
+        </Suspense>
     );
 }
