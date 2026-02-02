@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  OVERDUE
+  TRIAL
+}
+
+enum ServiceOrderStatus {
+  OPEN
+  IN_PROGRESS
+  FINISHED
+  CANCELED
+}
+
+enum OrderItemType {
+  PRODUCT
+  SERVICE
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+// Models
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          String   // 'admin_global' or 'admin_oficina'
+  office_id     String?  // Null for global admin
+  active        Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  office        Office?  @relation(fields: [office_id], references: [id])
+
+  @@map("users")
+}
+
+model Office {
+  id                  String             @id @default(uuid())
+  name                String
+  cnpj                String?
+  cpf                 String?
+  phone               String?
+  email               String?
+  address             String?
+  city                String?
+  state               String?
+  subscription_status SubscriptionStatus @default(INACTIVE)
+  trial_ends_at       DateTime?
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
+
+  users         User[]
+  products      Product[]
+  services      Service[]
+  clients       Client[]
+  vehicles      Vehicle[]
+  serviceOrders ServiceOrder[]
+  subscriptions Subscription[]
+  payments      Payment[]
+
+  @@map("offices")
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  office_id      String
+  name           String
+  description    String?
+  sku            String?
+  price          Decimal
+  cost_price     Decimal?
+  stock_quantity Int      @default(0)
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  office         Office             @relation(fields: [office_id], references: [id])
+  orderItems     ServiceOrderItem[]
+
+  @@map("products")
+}
+
+model Service {
+  id             String   @id @default(uuid())
+  office_id      String
+  name           String
+  description    String?
+  price          Decimal
+  estimated_time String? // e.g., "1h 30m"
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  office         Office             @relation(fields: [office_id], references: [id])
+  orderItems     ServiceOrderItem[]
+
+  @@map("services")
+}
+
+model Client {
+  id         String   @id @default(uuid())
+  office_id  String
+  name       String
+  cpf_cnpj   String?
+  phone      String?
+  email      String?
+  address    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  office        Office         @relation(fields: [office_id], references: [id])
+  vehicles      Vehicle[]
+  serviceOrders ServiceOrder[]
+
+  @@map("clients")
+}
+
+model Vehicle {
+  id         String   @id @default(uuid())
+  office_id  String
+  client_id  String
+  brand      String?
+  model      String?
+  year       Int?
+  plate      String?
+  color      String?
+  mileage    Int?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  office        Office         @relation(fields: [office_id], references: [id])
+  client        Client         @relation(fields: [client_id], references: [id])
+  serviceOrders ServiceOrder[]
+
+  @@map("vehicles")
+}
+
+model ServiceOrder {
+  id          String             @id @default(uuid())
+  office_id   String
+  client_id   String
+  vehicle_id  String
+  status      ServiceOrderStatus @default(OPEN)
+  total_value Decimal            @default(0)
+  notes       String?
+  created_at  DateTime           @default(now())
+  updated_at  DateTime           @updatedAt
+
+  office      Office             @relation(fields: [office_id], references: [id])
+  client      Client             @relation(fields: [client_id], references: [id])
+  vehicle     Vehicle            @relation(fields: [vehicle_id], references: [id])
+  items       ServiceOrderItem[]
+
+  @@map("service_orders")
+}
+
+model ServiceOrderItem {
+  id               String        @id @default(uuid())
+  service_order_id String
+  type             OrderItemType
+  product_id       String?
+  service_id       String?
+  quantity         Int
+  unit_price       Decimal
+  total_price      Decimal
+
+  serviceOrder     ServiceOrder  @relation(fields: [service_order_id], references: [id])
+  product          Product?      @relation(fields: [product_id], references: [id])
+  service          Service?      @relation(fields: [service_id], references: [id])
+
+  @@map("service_order_items")
+}
+
+model Subscription {
+  id                    String   @id @default(uuid())
+  office_id             String
+  asaas_customer_id     String?
+  asaas_subscription_id String?
+  plan_name             String?
+  value                 Decimal?
+  status                String?
+  next_billing_date     DateTime?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  office                Office   @relation(fields: [office_id], references: [id])
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  office_id        String
+  asaas_payment_id String?
+  value            Decimal
+  status           PaymentStatus
+  payment_date     DateTime?
+  billing_type     String?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+
+  office           Office        @relation(fields: [office_id], references: [id])
+
+  @@map("payments")
+}
