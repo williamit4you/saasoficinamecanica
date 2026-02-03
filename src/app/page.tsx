@@ -37,7 +37,7 @@ export default function LandingPage() {
                 <Button asChild className="bg-blue-600 hover:bg-blue-500 text-white" size="lg">
                   <Link href="#pricing">Começar Agora</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-black">
+                <Button asChild variant="outline" size="lg" className="bg-transparent text-white border-white hover:bg-white hover:text-black">
                   <Link href="#features">Saiba Mais</Link>
                 </Button>
               </div>
